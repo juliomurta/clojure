@@ -59,21 +59,81 @@
   [num]
   (if (and (> num 20 )
            (< num 100)
-           (not (= num ""))) "-" "")
+           (not (= num 0))) "-" "")
+)
+
+(defn- insert-space? 
+  [num limit]
+  (if (> num limit) " " "")
+)
+
+(defn- extract-mod
+  [num divided-by]
+  (mod num (* (quot num divided-by) divided-by))
+)
+
+(defn- extract-thousand 
+  [num]
+  (if (>= num 1000000) (extract-mod num 1000000) num)
+)
+
+(defn- extract-hundred 
+  [num]
+  (if (>= num 1000) (extract-mod num 1000) num)
+)
+
+(defn- extract-ten 
+  [num]
+  (if (>= num 100) (extract-mod num 100) num)
+)
+
+(defn- extract-unity
+  [num]
+  (if (>= num 10) (mod num 10) num)
+)
+
+(defn- extract-unity-if-more-than-20
+  [num]
+  (if (> num 20) (extract-unity num) num)
+)
+
+(defn- build-string-until-999
+  [hundred ten until-20]  
+  (str (between-999-and-100 hundred)
+       (insert-space? hundred 100)
+       (between-99-and-21 ten)        
+       (insert-hifen? ten) 
+       (if (not (and (= until-20 0) (> (+ hundred (+ ten until-20)) 20)))
+          (numbers-below-20 until-20))
+  )
+)
+
+(defn- between-999999-and-1000
+  [num]
+  (def bt-hundred (extract-hundred (quot num 1000)))
+  (def bt-ten (extract-ten bt-hundred))
+  (def bt-until-20 (extract-unity-if-more-than-20 bt-ten))  
+  (str (build-string-until-999 bt-hundred bt-ten bt-until-20) " thousand")
 )
 
 (defn- build-string 
   [num]
-  (str (between-999-and-100 num) 
-       (between-99-and-21 num) 
-       (insert-hifen? num) 
-       (numbers-below-20 (if (and (< num 100) (> num 20)) (mod num 10) num)))
+  (def thousand (extract-thousand num))
+  (def hundred (extract-hundred num))
+  (def ten (extract-ten num))
+  (def until-20 (extract-unity-if-more-than-20 num))    
+  (str (if (>= num 1000) (between-999999-and-1000 thousand))
+       (if (> num 1000) " ")       
+       (if (or (not (= 0 (mod num 1000))) (= num 0))
+        (build-string-until-999 hundred ten until-20)
+       )
+  )
 )
 
 (defn number 
   [num] 
   (if (or (< num 0) (> num 999999999999))
-    (throw IllegalArgumentException)
+    (throw IllegalArgumentException)    
     (build-string num)
   )
 )
