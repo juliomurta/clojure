@@ -42,16 +42,8 @@
 
 (defn- between-999-and-100
   [num]
-  (cond 
-    (= 1 (quot num 100)) "one hundred"
-    (= 2 (quot num 100)) "two hundred"
-    (= 3 (quot num 100)) "three hundred"
-    (= 4 (quot num 100)) "four hundred"
-    (= 5 (quot num 100)) "five hundred"
-    (= 6 (quot num 100)) "six hundred"
-    (= 7 (quot num 100)) "seven hundred"
-    (= 8 (quot num 100)) "eight hundred"
-    (= 9 (quot num 100)) "nine hundred"
+  (if (and (>= num 100) (< num 999))
+    (str (numbers-below-20 (quot num 100)) " hundred")
   )
 )
 
@@ -70,6 +62,11 @@
 (defn- extract-mod
   [num divided-by]
   (mod num (* (quot num divided-by) divided-by))
+)
+
+(defn- extract-million
+  [num]
+  (if (>= num 1000000000) (extract-mod num 1000000000) num)
 )
 
 (defn- extract-thousand 
@@ -113,17 +110,27 @@
   (def bt-hundred (extract-hundred (quot num 1000)))
   (def bt-ten (extract-ten bt-hundred))
   (def bt-until-20 (extract-unity-if-more-than-20 bt-ten))  
-  (str (build-string-until-999 bt-hundred bt-ten bt-until-20) " thousand")
+  (str (build-string-until-999 bt-hundred bt-ten bt-until-20) " thousand")  
+)
+
+(defn- between-999999999-and-1000000
+  [num]
+  (if (and (>= num 1000000) (< num 999999999))    
+    (str (numbers-below-20 (quot num 1000000)) " million")
+  )
 )
 
 (defn- build-string 
   [num]
+  (def million (extract-million num))
   (def thousand (extract-thousand num))
   (def hundred (extract-hundred num))
   (def ten (extract-ten num))
   (def until-20 (extract-unity-if-more-than-20 num))    
-  (str (if (>= num 1000) (between-999999-and-1000 thousand))
-       (if (> num 1000) " ")       
+  (str (if (>= num 1000000) (between-999999999-and-1000000 million))
+       (if (> num 1000000) " ")       
+       (if (and (>= num 1000) (> thousand 0)) (between-999999-and-1000 thousand))
+       (if (and (> num 1000) (> thousand 0)) " ")       
        (if (or (not (= 0 (mod num 1000))) (= num 0))
         (build-string-until-999 hundred ten until-20)
        )
