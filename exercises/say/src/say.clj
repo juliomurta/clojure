@@ -31,7 +31,7 @@
   (cond 
     (= 2 (quot num 10)) "twenty"
     (= 3 (quot num 10)) "thirty"
-    (= 4 (quot num 10)) "fourty"
+    (= 4 (quot num 10)) "forty"
     (= 5 (quot num 10)) "fifty"
     (= 6 (quot num 10)) "sixty"
     (= 7 (quot num 10)) "seventy"
@@ -62,6 +62,11 @@
 (defn- extract-mod
   [num divided-by]
   (mod num (* (quot num divided-by) divided-by))
+)
+
+(defn- extract-billion
+  [num]
+  (if (>= num 1000000000000) (extract-mod num 1000000000000) num)
 )
 
 (defn- extract-million
@@ -120,15 +125,25 @@
   )
 )
 
+(defn- between-999999999999-and-1000000000
+  [num]
+  (if (and (>= num 1000000000) (< num 999999999999))
+    (str (numbers-below-20 (quot num 1000000000)) " billion")
+  )
+)
+
 (defn- build-string 
   [num]
+  (def billion (extract-billion num))
   (def million (extract-million num))
   (def thousand (extract-thousand num))
   (def hundred (extract-hundred num))
   (def ten (extract-ten num))
-  (def until-20 (extract-unity-if-more-than-20 num))    
-  (str (if (>= num 1000000) (between-999999999-and-1000000 million))
-       (if (> num 1000000) " ")       
+  (def until-20 (extract-unity-if-more-than-20 num))
+  (str (if (>= num 1000000000) (between-999999999999-and-1000000000 billion))
+       (if (> num 1000000000) " ")
+       (if (>= num 1000000) (between-999999999-and-1000000 million))
+       (if (and (> num 1000000) (<= num 999999999)) " ")       
        (if (and (>= num 1000) (> thousand 0)) (between-999999-and-1000 thousand))
        (if (and (> num 1000) (> thousand 0)) " ")       
        (if (or (not (= 0 (mod num 1000))) (= num 0))
@@ -140,7 +155,7 @@
 (defn number 
   [num] 
   (if (or (< num 0) (> num 999999999999))
-    (throw IllegalArgumentException)    
+    (throw (IllegalArgumentException. "Out of range"))    
     (build-string num)
   )
 )
